@@ -1,0 +1,16 @@
+-- Função para aplicar o efeito fullbright sem sombras
+local function applyFullbrightWithoutShadows()
+    local lighting = game:GetService("Lighting")
+    
+    -- Ajustando a iluminação para um efeito fullbright sem sombras
+    lighting.Ambient = Color3.fromRGB(255, 255, 255)  -- Iluminação ambiente completamente branca
+    lighting.Brightness = 2  -- Brilho moderado para evitar cegueira, mas iluminar bem o ambiente
+    lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)  -- Luz ambiente externa também completamente branca
+    lighting.TimeOfDay = "14:00:00"  -- Hora do dia bem iluminada, sem sombras duras
+    
+    -- Desabilitando sombras completamente
+    lighting.GlobalShadows = false  -- Desativa todas as sombras no jogo
+end
+
+-- Chama a função para aplicar o fullbright sem sombras
+applyFullbrightWithoutShadows()
