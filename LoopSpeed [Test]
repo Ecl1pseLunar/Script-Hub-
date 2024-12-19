@@ -1,91 +1,10 @@
--- Adiciona o comando "loopspeed"
-addcmd('loopspeed', {'loopws'}, function(args, speaker)
-    local speed = args[1] or 16
-    if args[2] then
-        speed = args[2] or 16
-    end
-    if isNumber(speed) then
-        local Char = speaker.Character or workspace:FindFirstChild(speaker.Name)
-        local Human = Char and Char:FindFirstChildWhichIsA("Humanoid")
-        
-        local function WalkSpeedChange()
-            if Char and Human then
-                Human.WalkSpeed = speed
-            end
-        end
-        
-        WalkSpeedChange()
-        
-        -- Desconecta o loop existente e conecta um novo
-        HumanModCons.wsLoop = (HumanModCons.wsLoop and HumanModCons.wsLoop:Disconnect() and false) or Human:GetPropertyChangedSignal("WalkSpeed"):Connect(WalkSpeedChange)
-        
-        -- Escuta a adição de um novo personagem
-        HumanModCons.wsCA = (HumanModCons.wsCA and HumanModCons.wsCA:Disconnect() and false) or speaker.CharacterAdded:Connect(function(nChar)
-            Char, Human = nChar, nChar:WaitForChild("Humanoid")
-            WalkSpeedChange()
-            HumanModCons.wsLoop = (HumanModCons.wsLoop and HumanModCons.wsLoop:Disconnect() and false) or Human:GetPropertyChangedSignal("WalkSpeed"):Connect(WalkSpeedChange)
-        end)
-    end
-end)
 
--- Adiciona o comando "unloopspeed"
-addcmd('unloopspeed', {'unloopws'}, function(args, speaker)
-    HumanModCons.wsLoop = (HumanModCons.wsLoop and HumanModCons.wsLoop:Disconnect() and false) or nil
-    HumanModCons.wsCA = (HumanModCons.wsCA and HumanModCons.wsCA:Disconnect() and false) or nil
-end)
+Test = Window:AddTab({ Title = "Test", Icon = "" })
+Fluent:Notify({ Title = "Test Ativado? ", Content = "verifica si a Aba Test, poderá ser executado com loadstring " })
 
--- Adiciona o comando "spoofjumppower"
-addcmd('spoofjumppower', {'spoofjp'}, function(args, speaker)
-    if args[1] and isNumber(args[1]) then
-        if hookmetamethod then
-            local char = speaker.Character
-            local setpower
-            local index
-            index = hookmetamethod(game, "__index", function(self, key)
-                local keyclean = key:gsub("\0", "")
-                if (keyclean == "JumpPower" or keyclean == "jumpPower") and self:IsA("Humanoid") and self:IsDescendantOf(char) and not checkcaller() then
-                    return setpower or args[1]
-                end
-                return index(self, key)
-            end)
-            
-            local newindex
-            newindex = hookmetamethod(game, "__newindex", function(self, key, value)
-                local keyclean = string.gsub(key, "\0", "")
-                if (keyclean == "JumpPower" or keyclean == "jumpPower") and self:IsA("Humanoid") and self:IsDescendantOf(char) and not checkcaller() then
-                    setpower = tonumber(value)
-                    return setpower
-                end
-                return newindex(self, key, value)
-            end)
-        else
-            notify('Incompatible Exploit','Your exploit does not support this command (missing hookmetamethod)')
-        end
-    end
-end)
-
--- Exemplo de adição de campo de entrada para mudar a velocidade
-local Input = Tabs.Main:AddInput("Input", { 
-    Title = "Velocidade", 
-    Default = "16", -- Valor padrão da velocidade
-    Placeholder = "Digite a velocidade desejada...", 
-    Numeric = true
-})
-
--- Quando o valor no campo de entrada for alterado, atualiza a velocidade
-Input.OnChanged = function(value)
-    -- Converte o valor digitado em número
-    local speed = tonumber(value)
+Tabs.Main:AddParagraph({ Title = "Test", Content = "Verifica si a Aba Test pode ser possível executar com o loadstring! " })
     
-    if speed and speed > 0 then
-        -- Altera a velocidade do jogador
-        local Char = game.Players.LocalPlayer.Character or workspace:FindFirstChild(game.Players.LocalPlayer.Name)
-        local Human = Char and Char:FindFirstChildWhichIsA("Humanoid")
-        
-        if Human then
-            Human.WalkSpeed = speed
-        end
-    else
-        notify("Valor inválido", "Por favor, insira um número válido para a velocidade.")
-    end
-end
+Tabs.Main:AddButton({ Title = "Test", Callback = function() 
+Print("Botão Clicado com sucesso")
+Fluent:Notify({ Title = "Sucesso!!! ", Content = "Botão Clicado com sucesso!! " })
+end })
