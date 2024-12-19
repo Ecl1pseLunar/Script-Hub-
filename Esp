@@ -137,12 +137,62 @@ local UnloadPlayer = function(v)
     end
 end
 
+-- Evitar que objetos não jogáveis (como portas, madeiras) sejam marcados
+local function IsPlayer(v)
+    return v.Character and v.Character:FindFirstChild("Humanoid") and v:FindFirstChild("Character")
+end
+
 for i,v in pairs(game:GetService("Players"):GetPlayers()) do
-    spawn(function() pcall(LoadPlayer, v) end)
+    spawn(function() 
+        -- Marcar os jogadores, mas não o jogador local com a borda
+        if v ~= game.Players.LocalPlayer then
+            pcall(LoadPlayer, v)
+        else
+            -- Para o jogador local, exibe apenas o nome e vida
+            local vHolder = Instance.new("Folder", Holder)
+            vHolder.Name = v.Name
+            v.CharacterAdded:Connect(function()
+                pcall(LoadCharacter, v)
+            end)
+            v.CharacterRemoving:Connect(function()
+                pcall(UnloadCharacter, v)
+            end)
+            v.Changed:Connect(function(prop)
+                if prop == "TeamColor" then
+                    UnloadCharacter(v)
+                    wait()
+                    LoadCharacter(v)
+                end
+            end)
+            LoadCharacter(v)
+        end
+    end)
 end
 
 game:GetService("Players").PlayerAdded:Connect(function(v)
-    pcall(LoadPlayer, v)
+    -- Adiciona os outros jogadores sem borda, apenas nome e vida
+    if v ~= game.Players.LocalPlayer then
+        pcall(LoadPlayer, v)
+    else
+        pcall(function()
+            local vHolder = Instance.new("Folder", Holder)
+            vHolder.Name = v.Name
+            v.CharacterAdded:Connect(function()
+                pcall(LoadCharacter, v)
+            end)
+            v.CharacterRemoving:Connect(function()
+                pcall(UnloadCharacter, v)
+            end)
+            v.Changed:Connect(function(prop)
+                if prop == "TeamColor" then
+                    UnloadCharacter(v)
+                    wait()
+                    LoadCharacter(v)
+                end
+            end)
+            LoadCharacter(v)
+        end)
+    end
 end)
 
 game:GetService("Players").PlayerRemoving:Connect(function(v)
@@ -151,35 +201,18 @@ end)
 
 game:GetService("Players").LocalPlayer.NameDisplayDistance = 0
 
-if _G.Reantheajfdfjdgs then
-    return
-end
-
-_G.Reantheajfdfjdgs = ":suifayhgvsdghfsfkajewfrhk321rk213kjrgkhj432rj34f67df"
-
-local players = game:GetService("Players")
-local plr = players.LocalPlayer
-
-function esp(target, color)
-    if target.Character then
-        if not target.Character:FindFirstChild("GetReal") then
-            local highlight = Instance.new("Highlight")
-            highlight.RobloxLocked = true
-            highlight.Name = "GetReal"
-            highlight.Adornee = target.Character
-            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-            highlight.FillColor = color
-            highlight.Parent = target.Character
-        else
-            target.Character.GetReal.FillColor = color
+-- Loop para garantir que a borda esteja sempre visível
+while true do
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v.Character and v.Character:FindFirstChild("Humanoid") then
+            local vHolder = Holder:FindFirstChild(v.Name)
+            if vHolder then
+                local box = vHolder:FindFirstChild(v.Name .. "Box")
+                if box then
+                    box.Visible = true
+                end
+            end
         end
     end
-end
-
-while task.wait() do
-    for i, v in pairs(players:GetPlayers()) do
-        if v ~= plr then
-            esp(v, _G.UseTeamColor and v.TeamColor.Color or ((plr.TeamColor == v.TeamColor) and _G.FriendColor or _G.EnemyColor))
-        end
-    end
+    wait(1) -- Verifica a cada 1 segundo
 end
