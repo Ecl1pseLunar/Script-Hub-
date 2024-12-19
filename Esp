@@ -34,42 +34,50 @@ Tag.Text = "nil"
 Tag.Font = Enum.Font.SourceSansBold
 Tag.TextScaled = false
 
--- Função para adicionar o número da vida em cima da cabeça
-local function CreateHealthText(v)
-    local healthText = Instance.new("BillboardGui")
-    healthText.Name = "HealthText"
-    healthText.Size = UDim2.new(0, 100, 0, 20)
-    healthText.AlwaysOnTop = true
-    healthText.StudsOffset = Vector3.new(0, 3, 0) -- Ajuste a posição para ficar um pouco acima da cabeça
-    healthText.Parent = v.Character:WaitForChild("Head")
+-- Função para mostrar a vida
+local function showHealth(v)
+    local healthBar = v:FindFirstChild("HealthBar")
+    if not healthBar then
+        -- Criar o Display de Vida
+        healthBar = Instance.new("BillboardGui")
+        healthBar.Name = "HealthBar"
+        healthBar.Parent = v.Character.Head
+        healthBar.Size = UDim2.new(0, 150, 0, 20)
+        healthBar.StudsOffset = Vector3.new(0, 3, 0) -- Acima da cabeça
+        healthBar.AlwaysOnTop = true
 
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, 0, 1, 0)
-    textLabel.BackgroundTransparency = 1
-    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Cor do texto (branco)
-    textLabel.TextSize = 14
-    textLabel.Font = Enum.Font.SourceSansBold
-    textLabel.Text = "100/100" -- Inicialmente a vida é 100/100
-    textLabel.Parent = healthText
-
-    local function UpdateHealth()
-        local humanoid = v.Character:FindFirstChild("Humanoid")
-        if humanoid then
-            local currentHealth = math.floor(humanoid.Health)
-            local maxHealth = math.floor(humanoid.MaxHealth)
-            textLabel.Text = currentHealth .. "/" .. maxHealth -- Atualiza o texto para mostrar "vida atual/vida máxima"
-        end
+        local healthText = Instance.new("TextLabel", healthBar)
+        healthText.Name = "HealthText"
+        healthText.BackgroundTransparency = 1
+        healthText.Size = UDim2.new(1, 0, 1, 0)
+        healthText.TextSize = 14  -- Reduzido para ficar proporcional
+        healthText.TextColor3 = Color3.new(1, 1, 1)
+        healthText.TextStrokeTransparency = 0.8
+        healthText.Text = "100/100"
+        healthText.TextScaled = true
+        healthText.Font = Tag.Font  -- Usando a mesma fonte do nome
     end
 
-    -- Conectar a atualização da vida com a mudança de saúde
-    v.Character:WaitForChild("Humanoid").HealthChanged:Connect(UpdateHealth)
-    UpdateHealth() -- Atualiza o texto imediatamente
+    -- Atualizar a vida constantemente
+    local humanoid = v.Character:FindFirstChild("Humanoid")
+    if humanoid then
+        local maxHealth = humanoid.MaxHealth
+        local health = humanoid.Health
+        local healthText = healthBar:FindFirstChild("HealthText")
+        if healthText then
+            healthText.Text = math.floor(health) .. "/" .. math.floor(maxHealth)
+        end
+    end
 end
 
 local LoadCharacter = function(v)
     repeat wait() until v.Character ~= nil
     v.Character:WaitForChild("Humanoid")
     local vHolder = Holder:FindFirstChild(v.Name)
+    if not vHolder then
+        vHolder = Instance.new("Folder", Holder)
+        vHolder.Name = v.Name
+    end
     vHolder:ClearAllChildren()
     local b = Box:Clone()
     b.Name = v.Name .. "Box"
@@ -86,6 +94,10 @@ local LoadCharacter = function(v)
     t.Tag.Text = v.Name
     b.Color3 = Color3.new(v.TeamColor.r, v.TeamColor.g, v.TeamColor.b)
     t.Tag.TextColor3 = Color3.new(v.TeamColor.r, v.TeamColor.g, v.TeamColor.b)
+
+    -- Mostrar a vida
+    showHealth(v)
+
     local Update
     local UpdateNameTag = function()
         if not pcall(function()
@@ -98,9 +110,6 @@ local LoadCharacter = function(v)
     end
     UpdateNameTag()
     Update = v.Character.Humanoid.Changed:Connect(UpdateNameTag)
-    
-    -- Chama a função para criar o texto da saúde
-    CreateHealthText(v)
 end
 
 local UnloadCharacter = function(v)
@@ -137,62 +146,12 @@ local UnloadPlayer = function(v)
     end
 end
 
--- Evitar que objetos não jogáveis (como portas, madeiras) sejam marcados
-local function IsPlayer(v)
-    return v.Character and v.Character:FindFirstChild("Humanoid") and v:FindFirstChild("Character")
-end
-
 for i,v in pairs(game:GetService("Players"):GetPlayers()) do
-    spawn(function() 
-        -- Marcar os jogadores, mas não o jogador local com a borda
-        if v ~= game.Players.LocalPlayer then
-            pcall(LoadPlayer, v)
-        else
-            -- Para o jogador local, exibe apenas o nome e vida
-            local vHolder = Instance.new("Folder", Holder)
-            vHolder.Name = v.Name
-            v.CharacterAdded:Connect(function()
-                pcall(LoadCharacter, v)
-            end)
-            v.CharacterRemoving:Connect(function()
-                pcall(UnloadCharacter, v)
-            end)
-            v.Changed:Connect(function(prop)
-                if prop == "TeamColor" then
-                    UnloadCharacter(v)
-                    wait()
-                    LoadCharacter(v)
-                end
-            end)
-            LoadCharacter(v)
-        end
-    end)
+    spawn(function() pcall(LoadPlayer, v) end)
 end
 
 game:GetService("Players").PlayerAdded:Connect(function(v)
-    -- Adiciona os outros jogadores sem borda, apenas nome e vida
-    if v ~= game.Players.LocalPlayer then
-        pcall(LoadPlayer, v)
-    else
-        pcall(function()
-            local vHolder = Instance.new("Folder", Holder)
-            vHolder.Name = v.Name
-            v.CharacterAdded:Connect(function()
-                pcall(LoadCharacter, v)
-            end)
-            v.CharacterRemoving:Connect(function()
-                pcall(UnloadCharacter, v)
-            end)
-            v.Changed:Connect(function(prop)
-                if prop == "TeamColor" then
-                    UnloadCharacter(v)
-                    wait()
-                    LoadCharacter(v)
-                end
-            end)
-            LoadCharacter(v)
-        end)
-    end
+    pcall(LoadPlayer, v)
 end)
 
 game:GetService("Players").PlayerRemoving:Connect(function(v)
@@ -201,18 +160,37 @@ end)
 
 game:GetService("Players").LocalPlayer.NameDisplayDistance = 0
 
--- Loop para garantir que a borda esteja sempre visível
-while true do
-    for _, v in pairs(game.Players:GetPlayers()) do
-        if v.Character and v.Character:FindFirstChild("Humanoid") then
-            local vHolder = Holder:FindFirstChild(v.Name)
-            if vHolder then
-                local box = vHolder:FindFirstChild(v.Name .. "Box")
-                if box then
-                    box.Visible = true
-                end
-            end
+if _G.Reantheajfdfjdgs then
+    return
+end
+
+_G.Reantheajfdfjdgs = ":suifayhgvsdghfsfkajewfrhk321rk213kjrgkhj432rj34f67df"
+
+local players = game:GetService("Players")
+local plr = players.LocalPlayer
+
+function esp(target, color)
+    if target.Character then
+        if not target.Character:FindFirstChild("GetReal") then
+            local highlight = Instance.new("Highlight")
+            highlight.RobloxLocked = true
+            highlight.Name = "GetReal"
+            highlight.Adornee = target.Character
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            highlight.FillColor = color
+            highlight.Parent = target.Character
+        else
+            target.Character.GetReal.FillColor = color
         end
     end
-    wait(1) -- Verifica a cada 1 segundo
+end
+
+while task.wait() do
+    for i, v in pairs(players:GetPlayers()) do
+        if v ~= plr then
+            esp(v, _G.UseTeamColor and v.TeamColor.Color or ((plr.TeamColor == v.TeamColor) and _G.FriendColor or _G.EnemyColor))
+            -- Atualizar a vida
+            showHealth(v)
+        end
+    end
 end
