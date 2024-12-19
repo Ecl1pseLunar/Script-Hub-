@@ -2,9 +2,9 @@
 Test = Window:AddTab({ Title = "Test", Icon = "" })
 Fluent:Notify({ Title = "Test Ativado? ", Content = "verifica si a Aba Test, poderá ser executado com loadstring " })
 
-Tabs.Main:AddParagraph({ Title = "Test", Content = "Verifica si a Aba Test pode ser possível executar com o loadstring! " })
+Tabs.Test:AddParagraph({ Title = "Test", Content = "Verifica si a Aba Test pode ser possível executar com o loadstring! " })
     
-Tabs.Main:AddButton({ Title = "Test", Callback = function() 
+Tabs.Test:AddButton({ Title = "Test", Callback = function() 
 Print("Botão Clicado com sucesso")
 Fluent:Notify({ Title = "Sucesso!!! ", Content = "Botão Clicado com sucesso!! " })
 end })
